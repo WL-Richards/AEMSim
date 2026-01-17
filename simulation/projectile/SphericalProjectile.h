@@ -23,6 +23,9 @@ public:
     // Points that make up this objects trajectory and should we log them for this trajectory
     std::vector<chrono::ChVector3d> TrajectoryPoints;
     bool ShouldLogTrajectory = false;
+
+    // When true, projectile has been removed from physics and is render-only
+    bool Removed = false;
     
     SphericalProjectile(
         const std::shared_ptr<SphericalProjectileData>& data,

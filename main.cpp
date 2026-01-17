@@ -13,6 +13,7 @@
 //  - The marker is a small cylinder rigidly fixed to the ball so rotation is visible.
 // =============================================================================
 
+#include <chrono/physics/ChSystem.h>
 #include <chrono/physics/ChSystemNSC.h>
 #include <chrono/physics/ChBodyEasy.h>
 #include <chrono/physics/ChLinkMate.h>
@@ -49,7 +50,7 @@ int main(int argc, char* argv[]) {
     const double TIMESTEP = 1e-3;
 
     // 0 - Create a Chrono physical system
-    const std::shared_ptr<ChSystemNSC> sys = PhysicalSystemFactory::createNonSmoothContactSystem_Realworld();
+    const std::shared_ptr<chrono::ChSystem> sys = PhysicalSystemFactory::createNonSmoothContactSystemMulticore_Realworld();
     const std::shared_ptr<ChVisualSystemIrrlicht> vis = std::make_shared<ChVisualSystemIrrlicht>();
     
 
@@ -59,9 +60,9 @@ int main(int argc, char* argv[]) {
 
     // 2 - Spawn Projectiles
     const ChVector3d p0(0, (1 - INCHES_TO_METERS(23.373)) - 0.8, FEET_TO_METERS(2));      // 1m above ground
-    for (int i = 132; i < 140; i++)
+    for (int i = 0; i < 90; i++)
     {
-        const float hoodAngle = 0+i*0.5 * (CH_PI/180);
+        const float hoodAngle = 0+i * (CH_PI/180);
         const float xComponent = cos(hoodAngle);
         const float yComponent = sin(hoodAngle);
         const float shooterVelocity = 5.7f; // m/s
@@ -77,7 +78,7 @@ int main(int argc, char* argv[]) {
     }
     
     auto floor = WorldHelper::MakeInfiteishFloor(sys, -0.1);
-    WorldHelper::CreateHub(sys, ChVector3d(0, 1, 0));
+    WorldHelper::CreateTriangleMesh(sys, "C:\\Users\\Will\\Documents\\FRC\\AEMSim\\AEMSim\\2026Hub.obj", ChVector3d(0, 1, 0.));
     
     // ---- Irrlicht visualization system ----
     vis->AttachSystem(sys.get());
@@ -120,9 +121,13 @@ int main(int argc, char* argv[]) {
                      /*label_y_axis=*/true)
 
     // ---- Solver tuning (optional) ----
-    sys->SetSolverType(ChSolver::Type::PSOR);
-    sys->GetSolver()->AsIterative()->SetMaxIterations(100);
-    sys->GetSolver()->AsIterative()->SetTolerance(1e-6);
+    if (auto nsc_sys = std::dynamic_pointer_cast<chrono::ChSystemNSC>(sys)) {
+        if (auto solver = nsc_sys->GetSolver()) {
+            nsc_sys->SetSolverType(ChSolver::Type::PSOR);
+            solver->AsIterative()->SetMaxIterations(100);
+            solver->AsIterative()->SetTolerance(1e-6);
+        }
+    }
 
     // ---- Main loop ----
 

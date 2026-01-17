@@ -53,6 +53,7 @@ public:
 
         sys->GetSettings()->collision.collision_envelope = 0.01;
         sys->GetSettings()->collision.bins_per_axis = chrono::vec3(10, 10, 10);
+        sys->SetTimestepperType(chrono::ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
         
         sys->SetGravitationalAcceleration(chrono::ChVector3d(0, 0, -gravity));
         return sys;

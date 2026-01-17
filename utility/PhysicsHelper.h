@@ -28,6 +28,12 @@ public:
                                         );
 
     static bool HitGroundSphere(const std::shared_ptr<chrono::ChBody>& ball, double radius, double ground_z = 0.0);
+
+    static bool WithinBox(const std::shared_ptr<chrono::ChBody>& ball,
+                          double radius,
+                          const chrono::ChVector3d& center,
+                          const chrono::ChVector3d& extent);
+    
     
 };
 

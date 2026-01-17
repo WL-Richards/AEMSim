@@ -9,7 +9,7 @@
 #include "data/SphericalProjectileData.hpp"
 
 
-SphericalProjectileSpawner::SphericalProjectileSpawner(std::shared_ptr<chrono::ChSystemNSC> physicalSystem, std::shared_ptr<SphericalProjectileData> projectileData)
+SphericalProjectileSpawner::SphericalProjectileSpawner(std::shared_ptr<chrono::ChSystem> physicalSystem, std::shared_ptr<SphericalProjectileData> projectileData)
 {
     this->projectileData = projectileData;
     this->physicalSystem = physicalSystem;
@@ -72,6 +72,21 @@ void SphericalProjectileSpawner::DoPhysicsStep()
 {
     for(const auto& projectile : projectiles)
     {
+        if (!projectile->Removed &&
+            PhysicsHelper::HitGroundSphere(projectile->Sphere,
+                                           projectile->Data->AerodynamicParameters->RadiusM)) {
+            // Multicore collision removal isn't implemented; disable instead.
+            projectile->Sphere->EnableCollision(false);
+            projectile->Sphere->SetFixed(true);
+            projectile->Sphere->SetLinVel(chrono::ChVector3d(0, 0, 0));
+            projectile->Sphere->SetAngVelParent(chrono::ChVector3d(0, 0, 0));
+            projectile->Removed = true;
+        }
+
+        if (projectile->Removed) {
+            continue;
+        }
+
         projectile->Sphere->EmptyAccumulator(projectile->ForceAccumulatorIndex);
         
         // Apply the effects of aerodynamic forces (Drag + Magnus Effect) to a shape given its area
@@ -82,6 +97,8 @@ void SphericalProjectileSpawner::DoPhysicsStep()
             true, true
         );
         projectile->TrajectoryPoints.push_back(projectile->Sphere->GetPos());
+
+        
     }
 }
 
@@ -89,7 +106,10 @@ void SphericalProjectileSpawner::DoRenderStep(irr::video::IVideoDriver* drv)
 {
     for(const auto& projectile : projectiles)
     {
-        DrawDebugPolyline(drv, projectile->TrajectoryPoints, irr::video::SColor(255, 255, 200, 0), true);
+        const auto color = projectile->Removed
+            ? irr::video::SColor(255, 255, 60, 60)
+            : irr::video::SColor(255, 255, 200, 0);
+        DrawDebugPolyline(drv, projectile->TrajectoryPoints, color, true);
     }
 }
 

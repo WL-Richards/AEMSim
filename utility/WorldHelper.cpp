@@ -202,3 +202,41 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateTestCube(
     return testCube;
 }
 
+std::shared_ptr<chrono::ChBody> WorldHelper::CreateTriangleMesh(
+        const std::shared_ptr<chrono::ChSystem>& sys,
+        const std::string& filePath,
+        const chrono::ChVector3d& position
+    )
+{
+    auto mesh = chrono_types::make_shared<chrono::ChTriangleMeshConnected>();
+    mesh->LoadWavefrontMesh(filePath, /*load_normals=*/true, /*load_uv=*/true);
+
+    mesh->RepairDuplicateVertexes(1e-9);
+
+    auto body = chrono_types::make_shared<chrono::ChBody>();
+    body->SetFixed(true);
+    body->EnableCollision(true);
+    body->SetPos(position);
+
+    auto mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    mat->SetFriction(0.8f);
+    mat->SetRestitution(0.05f);
+
+    auto col_shape =
+        chrono_types::make_shared<chrono::ChCollisionShapeTriangleMesh>(
+            mat,
+            mesh,
+            /*is_static=*/true,
+            /*is_convex=*/false
+        );
+
+    body->AddCollisionShape(col_shape);
+    
+    auto vis = chrono_types::make_shared<chrono::ChVisualShapeTriangleMesh>();
+    vis->SetMesh(mesh);
+    body->AddVisualShape(vis);
+
+    sys->AddBody(body);
+    return body;
+}
+

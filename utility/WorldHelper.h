@@ -24,5 +24,11 @@ public:
         const std::shared_ptr<chrono::ChSystem>& sys,
         const chrono::ChVector3d& hubLocation
     );
+
+    static std::shared_ptr<chrono::ChBody> CreateTriangleMesh(
+        const std::shared_ptr<chrono::ChSystem>& sys,
+        const std::string& filePath,
+        const chrono::ChVector3d& position
+    );
     
 };

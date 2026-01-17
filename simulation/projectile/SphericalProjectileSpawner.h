@@ -17,7 +17,7 @@ class SphericalProjectileSpawner : public Stepable
     
 public:
     SphericalProjectileSpawner(
-        std::shared_ptr<chrono::ChSystemNSC> physicalSystem,      // Physical system that the objects are being spawned within
+        std::shared_ptr<chrono::ChSystem> physicalSystem,      // Physical system that the objects are being spawned within
         std::shared_ptr<SphericalProjectileData> projectileData   // Data about the projectile we are spawning
     );
 
@@ -37,7 +37,7 @@ public:
     virtual ~SphericalProjectileSpawner() = default;
     
 private:
-    std::shared_ptr<chrono::ChSystemNSC> physicalSystem;
+    std::shared_ptr<chrono::ChSystem> physicalSystem;
     std::shared_ptr<SphericalProjectileData> projectileData;
     
     std::vector<std::unique_ptr<SphericalProjectile>> projectiles;
