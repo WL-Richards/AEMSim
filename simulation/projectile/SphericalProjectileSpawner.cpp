@@ -77,7 +77,7 @@ void SphericalProjectileSpawner::DoPhysicsStep()
                                            projectile->Data->AerodynamicParameters->RadiusM)) {
             // Multicore collision removal isn't implemented; disable instead.
             projectile->Sphere->EnableCollision(false);
-            projectile->Sphere->SetFixed(true);
+            //projectile->Sphere->SetFixed(true);
             projectile->Sphere->SetLinVel(chrono::ChVector3d(0, 0, 0));
             projectile->Sphere->SetAngVelParent(chrono::ChVector3d(0, 0, 0));
             projectile->Removed = true;
@@ -96,6 +96,7 @@ void SphericalProjectileSpawner::DoPhysicsStep()
             std::static_pointer_cast<AerodynamicParametersBase<SphericalAeroParameters>>(projectileData->AerodynamicParameters),
             true, true
         );
+        std::cout << projectile->Sphere->GetPos().y() << "," << projectile->Sphere->GetAngVelLocal().Length() << "\n";
         projectile->TrajectoryPoints.push_back(projectile->Sphere->GetPos());
 
         

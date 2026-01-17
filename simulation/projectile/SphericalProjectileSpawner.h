@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include <chrono/physics/ChSystemNSC.h>
 
+#include "./SphericalProjectile.h"
 #include "../../utility/interfaces/Stepable.h"
 
-class SphericalProjectile;
 
 namespace chrono
 {
@@ -33,8 +33,6 @@ public:
     void DoPhysicsStep() override;
     void DoRenderStep(irr::video::IVideoDriver* drv) override;
 
-
-    virtual ~SphericalProjectileSpawner() = default;
     
 private:
     std::shared_ptr<chrono::ChSystem> physicalSystem;

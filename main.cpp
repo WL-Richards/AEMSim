@@ -59,26 +59,31 @@ int main(int argc, char* argv[]) {
     const std::shared_ptr<SphericalProjectileSpawner> projectileSpawner = std::make_shared<SphericalProjectileSpawner>(sys, projectileData);
 
     // 2 - Spawn Projectiles
-    const ChVector3d p0(0, (1 - INCHES_TO_METERS(23.373)) - 0.8, FEET_TO_METERS(2));      // 1m above ground
-    for (int i = 0; i < 90; i++)
-    {
-        const float hoodAngle = 0+i * (CH_PI/180);
-        const float xComponent = cos(hoodAngle);
-        const float yComponent = sin(hoodAngle);
-        const float shooterVelocity = 5.7f; // m/s
-        const ChVector3d shooter_initial(0, xComponent * shooterVelocity, yComponent * shooterVelocity); // m/s
+    //const ChVector3d p0(0, (1 - INCHES_TO_METERS(23.373)) - 0.8, FEET_TO_METERS(2));      // 1m above ground
+    const ChVector3d p0(0, 0, 0.1);      // 1m above ground
 
-        const ChVector3d robot_velocity(0.0, 0, 0.0); // m/s
-        const ChVector3d w0(0, 0, 0);  // rad/s (spin)
-        const ChVector3d v0 = shooter_initial + robot_velocity;
-        std::cout << "Hood Angle: " << hoodAngle * (180/CH_PI) << "\n";
+    // const float hoodAngle = 70 * (CH_PI/180);
+    // const float xComponent = cos(hoodAngle);
+    // const float yComponent = sin(hoodAngle);
+    // const float shooterVelocity = 8.7f; // m/s
+    // const ChVector3d shooter_initial(0, xComponent * shooterVelocity, yComponent * shooterVelocity); // m/s
+    const ChVector3d shooter_initial(5.26585, -3.94938, 10.8601); // m/s
+
+    const ChVector3d robot_velocity(0,0,0); // m/s
+    ///const ChVector3d w0((-0.8)*200,(-0.6)*200,0);  // rad/s (spin)
+    //const ChVector3d w0((0.8)*25,(0.6)*25,0);  // rad/s (spin)
+    const ChVector3d w0(0.0, 0.0, 0.0);  // rad/s (spin)
+    const ChVector3d v0 = shooter_initial + robot_velocity;
+    //std::cout << "Hood Angle: " << hoodAngle * (180/CH_PI) << "\n";
 
 
-        projectileSpawner->Spawn(p0, v0, w0, true);
-    }
+    projectileSpawner->Spawn(p0, v0, w0, true);
+    
     
     auto floor = WorldHelper::MakeInfiteishFloor(sys, -0.1);
-    WorldHelper::CreateTriangleMesh(sys, "C:\\Users\\Will\\Documents\\FRC\\AEMSim\\AEMSim\\2026Hub.obj", ChVector3d(0, 1, 0.));
+    //WorldHelper::CreateTriangleMesh(sys, "/home/will/Documents/frc/AEMSim/2026Hub.obj", ChVector3d(0, 1, 0.));
+    WorldHelper::CreateTestCube(sys, ChVector3d(4, -3, 5));
+    WorldHelper::CreateTestCube(sys, ChVector3d(8, -6, 2));
     
     // ---- Irrlicht visualization system ----
     vis->AttachSystem(sys.get());
@@ -89,8 +94,10 @@ int main(int argc, char* argv[]) {
     vis->Initialize();
     
     auto telemetryHud = std::make_unique<SimTelemetryHUD>(vis, sys, TIMESTEP);
+    
     auto camera = std::make_unique<OrbitFieldCameraController>(
         vis,
+        OrbitFieldCameraController::Params(),
         chrono::ChVector3d(0, 0, 0), // target
         8.0,                                // distance
         0.7,                                // yaw

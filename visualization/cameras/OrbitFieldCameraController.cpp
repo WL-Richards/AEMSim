@@ -3,9 +3,11 @@
 #include <chrono/assets/ChVisualSystem.h>
 #include <chrono_irrlicht/ChVisualSystemIrrlicht.h>
 
-OrbitFieldCameraController::OrbitFieldCameraController(std::shared_ptr<chrono::irrlicht::ChVisualSystemIrrlicht> vis,
-                                                       const chrono::ChVector3d& initial_target, double initial_distance, double initial_yaw, double initial_pitch,
-                                                       Params params) : m_vis(vis),
+OrbitFieldCameraController::OrbitFieldCameraController(
+                                                        std::shared_ptr<chrono::irrlicht::ChVisualSystemIrrlicht> vis,
+                                                        const Params& params,
+                                                        const chrono::ChVector3d& initial_target, double initial_distance, double initial_yaw, double initial_pitch
+                                                       ) : m_vis(vis),
                                                                         m_target(initial_target),
                                                                         m_distance(initial_distance),
                                                                         m_yaw(initial_yaw),
@@ -265,7 +267,7 @@ void OrbitFieldCameraController::applyToCamera()
     m_cam->setUpVector(ToIrr(up));
 }
 
-class irr::core::vector3df OrbitFieldCameraController::ToIrr(const chrono::ChVector3d& v)
+irr::core::vector3df OrbitFieldCameraController::ToIrr(const chrono::ChVector3d& v)
 {
     return irr::core::vector3df((irr::f32)v.x(), (irr::f32)v.y(), (irr::f32)v.z());
 }
