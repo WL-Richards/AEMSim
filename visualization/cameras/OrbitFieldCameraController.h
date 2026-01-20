@@ -35,8 +35,8 @@ public:
         double zoom_sens  = 0.12;    // exponential zoom per wheel notch
 
         // Keyboard speeds (world units / second or radians / second)
-        double move_speed = 3.0;     // WASD (in-plane)
-        double lift_speed = 3.0;     // E/Q
+        double move_speed = 5.0;     // WASD (in-plane)
+        double lift_speed = 6.0;     // E/Q
         double rot_speed  = 1.5;     // IJKL
 
         // Limits
@@ -48,11 +48,12 @@ public:
 
 
     OrbitFieldCameraController(std::shared_ptr<chrono::irrlicht::ChVisualSystemIrrlicht> vis,
+                               const Params& params,
+
                                const chrono::ChVector3d& initial_target = chrono::ChVector3d(0, 0, 0),
                                double initial_distance = 6.0,
                                double initial_yaw = 0.8,
-                               double initial_pitch = 0.55,
-                               Params params = Params());
+                               double initial_pitch = 0.55);
 
     void Update(double dt);
 

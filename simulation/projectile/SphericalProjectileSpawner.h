@@ -3,9 +3,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "./SphericalProjectile.h"
 #include "../../utility/interfaces/Stepable.h"
 
-class SphericalProjectile;
 
 namespace chrono
 {
@@ -38,8 +38,6 @@ public:
     void AddNonRemovalBody(const std::shared_ptr<chrono::ChBody>& body);
     void AddFunnelBody(const std::shared_ptr<chrono::ChBody>& body, const chrono::ChVector3d& hub_center);
 
-
-    virtual ~SphericalProjectileSpawner() = default;
     
     void SweepShots(
         const chrono::ChVector3d& p0,

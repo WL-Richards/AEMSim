@@ -240,6 +240,7 @@ void SphericalProjectileSpawner::DoPhysicsStep()
                 projectileData->AerodynamicParameters),
             true, true
         );
+        std::cout << projectile->Sphere->GetPos().y() << "," << projectile->Sphere->GetAngVelLocal().Length() << "\n";
         projectile->TrajectoryPoints.push_back(projectile->Sphere->GetPos());
     }
 }
