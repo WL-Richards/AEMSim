@@ -26,7 +26,7 @@ public:
      * Create a new physical system with preconfigured properties to match that of the realworld
      * @return Newly created physics system with 'Realworld' configuration
      */
-    static std::shared_ptr<chrono::ChSystemMulticoreNSC> createNonSmoothContactSystemMulticore_Realworld()
+    static std::shared_ptr<chrono::ChSystemMulticoreNSC> createNonSmoothContactSystemMulticore_Realworld(int thread_count = 8)
     {
         std::shared_ptr<chrono::ChSystemMulticoreNSC> sys = chrono_types::make_shared<chrono::ChSystemMulticoreNSC>();
         
@@ -36,7 +36,7 @@ public:
         uint max_iteration = 30;
         chrono::real tolerance = 1e-3;
         
-        sys->SetNumThreads(8);
+        sys->SetNumThreads(thread_count);
         
         sys->SetCollisionSystemType(chrono::ChCollisionSystem::Type::MULTICORE);
 

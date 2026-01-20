@@ -1,5 +1,8 @@
 ﻿#include "DebugDrawer.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include <chrono_irrlicht/ChVisualSystemIrrlicht.h>
 
 #include "AMath.h"
@@ -10,9 +13,43 @@ namespace irr::gui
     class IGUIEnvironment;
 }
 
+namespace
+{
+    void DrawArrow3D(irr::video::IVideoDriver* driver,
+                     const irr::core::vector3df& start,
+                     const irr::core::vector3df& end,
+                     const irr::video::SColor& color,
+                     float head_length_m,
+                     float head_width_m)
+    {
+        irr::core::vector3df dir = end - start;
+        const float length = dir.getLength();
+        if (length <= 1e-6f) return;
+
+        dir /= length;
+
+        irr::core::vector3df up(0.0f, 0.0f, 1.0f);
+        if (std::abs(dir.dotProduct(up)) > 0.98f) {
+            up = irr::core::vector3df(0.0f, 1.0f, 0.0f);
+        }
+
+        irr::core::vector3df perp = dir.crossProduct(up);
+        perp.normalize();
+
+        const float head_len = std::min(head_length_m, length * 0.5f);
+        const irr::core::vector3df head_base = end - dir * head_len;
+        const irr::core::vector3df left = head_base + perp * head_width_m;
+        const irr::core::vector3df right = head_base - perp * head_width_m;
+
+        driver->draw3DLine(start, end, color);
+        driver->draw3DLine(end, left, color);
+        driver->draw3DLine(end, right, color);
+    }
+}
+
 void DebugDrawer::DrawGridXY(irr::video::IVideoDriver* driver, float z_plane_height, float half_extent_m,
                              float minor_step_m, int major_every, const irr::video::SColor& minor_color, const irr::video::SColor& major_color,
-                             const irr::video::SColor& x_axis_color, const irr::video::SColor& y_axis_color)
+                             const irr::video::SColor& y_axis_color, const irr::video::SColor& x_axis_color)
 {
     if (!driver) return;
     if (minor_step_m <= 0 || half_extent_m <= 0) return;
@@ -49,6 +86,52 @@ void DebugDrawer::DrawGridXY(irr::video::IVideoDriver* driver, float z_plane_hei
             );
         }
     }
+}
+
+void DebugDrawer::DrawVector3dAxisArrows(irr::video::IVideoDriver* driver,
+                                         const chrono::ChVector3d& vec,
+                                         const irr::video::SColor& color,
+                                         const chrono::ChVector3d& origin,
+                                         float head_length_m,
+                                         float head_width_m,
+                                         bool draw_components)
+{
+    if (!driver) return;
+
+    SetDebugDriverMaterial(driver);
+
+    const irr::core::vector3df start(
+        (irr::f32)origin.x(),
+        (irr::f32)origin.y(),
+        (irr::f32)origin.z()
+    );
+
+    const irr::core::vector3df x_end(
+        (irr::f32)(origin.x() + vec.x()),
+        (irr::f32)origin.y(),
+        (irr::f32)origin.z()
+    );
+
+    const irr::core::vector3df y_end(
+        (irr::f32)(origin.x() + vec.x()),
+        (irr::f32)(origin.y() + vec.y()),
+        (irr::f32)origin.z()
+    );
+
+    const irr::core::vector3df z_end(
+        (irr::f32)(origin.x() + vec.x()),
+        (irr::f32)(origin.y() + vec.y()),
+        (irr::f32)(origin.z() + vec.z())
+    );
+
+    if (!draw_components) {
+        DrawArrow3D(driver, start, z_end, color, head_length_m, head_width_m);
+        return;
+    }
+
+    DrawArrow3D(driver, start, x_end, irr::video::SColor(255, 255, 0, 0), head_length_m, head_width_m);
+    DrawArrow3D(driver, x_end, y_end, irr::video::SColor(255, 0, 255, 0), head_length_m, head_width_m);
+    DrawArrow3D(driver, y_end, z_end, irr::video::SColor(255, 0, 0, 255), head_length_m, head_width_m);
 }
 
 void DebugDrawer::DrawPolyline3D(irr::video::IVideoDriver* driver, const std::vector<chrono::ChVector3d>& pts,

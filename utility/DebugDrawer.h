@@ -37,7 +37,15 @@ minor_color, major_color, x_axis_color, y_axis_color)                           
         DebugDrawer::DrawPolyline3D(driver, pts, color, depth_test);               \
     } while (0)
 
-#define DrawDebugMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, text_height_m, color, label_x_axis, label_y_axis) DebugDrawer::DrawMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, text_height_m, color, label_x_axis, label_y_axis);       
+#define DrawDebugMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, text_height_m, color, label_x_axis, label_y_axis) DebugDrawer::DrawMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, text_height_m, color, label_x_axis, label_y_axis)   
+
+#define DrawDebugVector3DComponents(driver, vec) DebugDrawer::DrawVector3dAxisArrows(driver, vec, irr::video::SColor(255, 255, 255, 255), chrono::ChVector3d(0, 0, 0), 0.15f, 0.06f, true)
+#define DrawDebugVector3DComponentsAtOrigin(driver, vec, origin) DebugDrawer::DrawVector3dAxisArrows(driver, vec, irr::video::SColor(255, 255, 255, 255), origin, 0.15f, 0.06f, true)
+
+#define DrawDebugVector3D(driver, vec) DebugDrawer::DrawVector3dAxisArrows(driver, vec, irr::video::SColor(255, 255, 255, 255), chrono::ChVector3d(0, 0, 0), 0.15f, 0.06f, false)
+#define DrawDebugVector3DColor(driver, vec, color) DebugDrawer::DrawVector3dAxisArrows(driver, vec, color, chrono::ChVector3d(0, 0, 0), 0.15f, 0.06f, false)
+#define DrawDebugVector3DAtOrigin(driver, vec, origin) DebugDrawer::DrawVector3dAxisArrows(driver, vec, irr::video::SColor(255, 255, 255, 255), origin, 0.15f, 0.06f, false)
+#define DrawDebugVector3DAtOriginColor(driver, vec, origin, color) DebugDrawer::DrawVector3dAxisArrows(driver, vec, color, origin, 0.15f, 0.06f, false)
 
 class DebugDrawer
 {
@@ -62,8 +70,8 @@ public:
                            int major_every,
                            const irr::video::SColor& minor_color,
                            const irr::video::SColor& major_color,
-                           const irr::video::SColor& x_axis_color,
-                           const irr::video::SColor& y_axis_color);
+                           const irr::video::SColor& y_axis_color,
+                           const irr::video::SColor& x_axis_color);
 
     /**
      * Create a 3d line between a vector of Vector3s
@@ -100,6 +108,23 @@ public:
                                  const irr::video::SColor& color,
                                  bool label_x_axis = true,
                                  bool label_y_axis = true);
+
+    /**
+     * Draws the components of a vector as a series of arrows: X (red), Y (green), Z (blue).
+     * @param driver The video driver we are using to draw the lines
+     * @param vec The vector whose components we are visualizing
+     * @param origin The world-space origin for the first arrow
+     * @param head_length_m Length of the arrow head in meters
+     * @param head_width_m Width of the arrow head in meters
+     */
+    static void DrawVector3dAxisArrows(irr::video::IVideoDriver* driver,
+                                       const chrono::ChVector3d& vec,
+                                       const irr::video::SColor& color,
+                                       const chrono::ChVector3d& origin = chrono::ChVector3d(0, 0, 0),
+                                       float head_length_m = 0.15f,
+                                       float head_width_m = 0.06f,
+                                       bool draw_components = true
+                                       );
     
 
     /**

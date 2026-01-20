@@ -26,6 +26,9 @@ public:
 
     // When true, projectile has been removed from physics and is render-only
     bool Removed = false;
+
+    // When true, projectile passed through the funnel trigger
+    bool InGoal = false;
     
     SphericalProjectile(
         const std::shared_ptr<SphericalProjectileData>& data,
