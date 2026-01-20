@@ -240,7 +240,7 @@ void SphericalProjectileSpawner::DoPhysicsStep()
                 projectileData->AerodynamicParameters),
             true, true
         );
-        std::cout << projectile->Sphere->GetPos().y() << "," << projectile->Sphere->GetAngVelLocal().Length() << "\n";
+        //std::cout << projectile->Sphere->GetPos().y() << "," << projectile->Sphere->GetAngVelLocal().Length() << "\n";
         projectile->TrajectoryPoints.push_back(projectile->Sphere->GetPos());
     }
 }
@@ -288,7 +288,7 @@ void SphericalProjectileSpawner::SweepShots(const chrono::ChVector3d& p0,
                     std::sin(angleRad) * speed
                 );
     
-                this->Spawn(p0, v0 + robotVelocity, w0, true);
+                this->Spawn(p0, v0 + robotVelocity, w0, false);
             }
         }
     }

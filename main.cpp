@@ -49,6 +49,7 @@ int main(int argc, char* argv[]) {
     
     const double TIMESTEP = 1e-3;
     const bool use_visual = true;
+    const bool has_hub = false;
     const int steps_no_visual = 1733;
 
     // 0 - Create a Chrono physical system
@@ -68,15 +69,21 @@ int main(int argc, char* argv[]) {
     //THIS IS 70-30 angle 4 - 10.5 m/s
     //projectileSpawner->SweepShots(p0, 30.f, 70.f, 0.5f, 4.f, 10.5f, 0.5f, robot_velocity);
     
-    projectileSpawner->SweepShots(p0, 55.f, 70.f, 0.5f, 4.f, 10.5f, 0.5f, robot_velocity);
+    projectileSpawner->SweepShots(p0, 30.f, 31.f, 0.5f, 10.5f, 16.f, 0.5f, robot_velocity);
     auto floor = WorldHelper::MakeInfiteishFloor(sys, -0.1);
-    const ChVector3d hub_location(INCHES_TO_METERS(80), 0, 0.0);
+    // CLOSEST WE CAN BE
+    //const ChVector3d hub_location(INCHES_TO_METERS(75), 0, 0.0);
+    // HUB CENTER TO FRONT WALL: -INCHES_TO_METERS(23.373)
+
+    // DISCORD PICTURE LOCATION:
+    //const ChVector3d hub_location(INCHES_TO_METERS(182.11), 0, 0.0);
     
     // FARTHEST WE CAN BE FROM HUB:
-    // const ChVector3d hub_location(INCHES_TO_METERS(245), 0, 0.0);
+    const ChVector3d hub_location(INCHES_TO_METERS(245), 0, 0.0);
     std::vector<std::shared_ptr<chrono::ChBody>> funnel_bodies;
-    WorldHelper::CreateHub(sys, hub_location, chrono::QuatFromAngleZ(-CH_PI/2), &funnel_bodies);
-
+    if(has_hub){
+        WorldHelper::CreateHub(sys, hub_location, chrono::QuatFromAngleZ(-CH_PI/2), &funnel_bodies);
+    }
     
 
     const double funnel_center_z =
@@ -94,27 +101,29 @@ int main(int argc, char* argv[]) {
     trigger_mat->SetFriction(0.0f);
     trigger_mat->SetRestitution(0.0f);
 
-    auto funnel_trigger = chrono_types::make_shared<chrono::ChBodyEasyBox>(
-        trigger_size,
-        trigger_size,
-        trigger_thickness,
-        1000.0,
-        /*create_visualization=*/true,
-        /*create_collision=*/true,
-        trigger_mat
-    );
-    if (auto vm = funnel_trigger->GetVisualModel()) {
-        if (vm->GetNumShapes() > 0) {
-            vm->GetShape(0)->SetColor(chrono::ChColor(0.2f, 0.9f, 0.2f));
+    if(has_hub){
+        auto funnel_trigger = chrono_types::make_shared<chrono::ChBodyEasyBox>(
+            trigger_size,
+            trigger_size,
+            trigger_thickness,
+            1000.0,
+            /*create_visualization=*/true,
+            /*create_collision=*/true,
+            trigger_mat
+        );
+        if (auto vm = funnel_trigger->GetVisualModel()) {
+            if (vm->GetNumShapes() > 0) {
+                vm->GetShape(0)->SetColor(chrono::ChColor(0.2f, 0.9f, 0.2f));
+            }
         }
-    }
-    funnel_trigger->SetFixed(true);
-    funnel_trigger->SetPos(hub_location + chrono::ChVector3d(0, 0, trigger_z));
-    funnel_trigger->EnableCollision(true);
-    sys->AddBody(funnel_trigger);
-    projectileSpawner->AddTriggerBody(funnel_trigger);
-    for (const auto& funnel_body : funnel_bodies) {
-        projectileSpawner->AddFunnelBody(funnel_body, hub_location);
+        funnel_trigger->SetFixed(true);
+        funnel_trigger->SetPos(hub_location + chrono::ChVector3d(0, 0, trigger_z));
+        funnel_trigger->EnableCollision(true);
+        sys->AddBody(funnel_trigger);
+        projectileSpawner->AddTriggerBody(funnel_trigger);
+        for (const auto& funnel_body : funnel_bodies) {
+            projectileSpawner->AddFunnelBody(funnel_body, hub_location);
+        }
     }
 
     //WorldHelper::CreateTriangleMesh(sys, "C:\\Users\\Will\\Documents\\FRC\\AEMSim\\AEMSim\\2026Hub.obj", ChVector3d(INCHES_TO_METERS(182.11), 0, 0.), chrono::QuatFromAngleZ(CH_PI/2));
@@ -142,10 +151,11 @@ int main(int argc, char* argv[]) {
         auto telemetryHud = std::make_unique<SimTelemetryHUD>(vis, sys, TIMESTEP);
         auto camera = std::make_unique<OrbitFieldCameraController>(
             vis,
+            OrbitFieldCameraController::Params(),
             hub_location, // target
             8.0,                                // distance
             0.7,                                // yaw
-            0.55                                // pitch
+            -1                                // pitch
         );
         
         vis->AddUserEventReceiver(camera.get());
