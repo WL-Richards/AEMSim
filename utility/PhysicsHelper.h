@@ -63,8 +63,10 @@ void PhysicsHelper::ApplyAerodynamicsToArea(
             (0.5 * p->AirDensity * p->getArea() * p->MagnusCoefficient) * (w_W.Cross(v_rel));
 
         // Apply at COM in world coordinates
-        body->AccumulateForce(acc_idx, enableDrag ? F_drag : chrono::ChVector3d(),   chrono::VNULL, /*local=*/false);
-        body->AccumulateForce(acc_idx, enableMagnus ? F_magnus : chrono::ChVector3d(), chrono::VNULL, /*local=*/false);
+        const auto com_W = body->GetPos();
+        body->AccumulateForce(acc_idx, enableDrag ? F_drag : chrono::ChVector3d(),   com_W, /*local=*/false);
+        body->AccumulateForce(acc_idx, enableMagnus ? F_magnus : chrono::ChVector3d(), com_W, /*local=*/false);
+        
     }
 }
 
