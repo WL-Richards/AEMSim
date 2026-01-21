@@ -26,7 +26,9 @@ public:
         const std::shared_ptr<chrono::ChSystem>& sys,
         const chrono::ChVector3d& hubLocation,
         const chrono::ChQuaternion<double>& rotation = chrono::QUNIT,
-        std::vector<std::shared_ptr<chrono::ChBody>>* funnel_bodies_out = nullptr);
+        std::vector<std::shared_ptr<chrono::ChBody>>* funnel_bodies_out = nullptr,
+        double opening_size_x_in = 22.0,
+        double opening_size_y_in = 22.0);
 
     static std::shared_ptr<chrono::ChBody> CreateTestCube(
         const std::shared_ptr<chrono::ChSystem>& sys,
@@ -78,6 +80,18 @@ public:
         double density = 1000.0,
         bool fixed = true,
         const chrono::ChColor& color = chrono::ChColor(0.7f, 0.7f, 0.7f)
+    );
+
+    static std::vector<std::shared_ptr<chrono::ChBody>> CreateWalls(
+        const std::shared_ptr<chrono::ChSystem>& sys,
+        const chrono::ChVector3d& center,
+        double half_x,
+        double half_y,
+        double height,
+        double thickness = 0.1,
+        double density = 1000.0,
+        bool fixed = true,
+        const chrono::ChColor& color = chrono::ChColor(0.6f, 0.6f, 0.6f)
     );
 
 };

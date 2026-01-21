@@ -37,7 +37,7 @@ minor_color, major_color, x_axis_color, y_axis_color)                           
         DebugDrawer::DrawPolyline3D(driver, pts, color, depth_test);               \
     } while (0)
 
-#define DrawDebugMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, text_height_m, color, label_x_axis, label_y_axis) DebugDrawer::DrawMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, text_height_m, color, label_x_axis, label_y_axis)   
+#define DrawDebugMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, scale, color, label_x_axis, label_y_axis) DebugDrawer::DrawMeterLabelsXY(device, smgr, z_plane, half_extent_m, step_m, scale, color, label_x_axis, label_y_axis)   
 
 #define DrawDebugVector3DComponents(driver, vec) DebugDrawer::DrawVector3dAxisArrows(driver, vec, irr::video::SColor(255, 255, 255, 255), chrono::ChVector3d(0, 0, 0), 0.15f, 0.06f, true)
 #define DrawDebugVector3DComponentsAtOrigin(driver, vec, origin) DebugDrawer::DrawVector3dAxisArrows(driver, vec, irr::video::SColor(255, 255, 255, 255), origin, 0.15f, 0.06f, true)
@@ -46,6 +46,12 @@ minor_color, major_color, x_axis_color, y_axis_color)                           
 #define DrawDebugVector3DColor(driver, vec, color) DebugDrawer::DrawVector3dAxisArrows(driver, vec, color, chrono::ChVector3d(0, 0, 0), 0.15f, 0.06f, false)
 #define DrawDebugVector3DAtOrigin(driver, vec, origin) DebugDrawer::DrawVector3dAxisArrows(driver, vec, irr::video::SColor(255, 255, 255, 255), origin, 0.15f, 0.06f, false)
 #define DrawDebugVector3DAtOriginColor(driver, vec, origin, color) DebugDrawer::DrawVector3dAxisArrows(driver, vec, color, origin, 0.15f, 0.06f, false)
+
+// Draw a 1 meter or 1 yard stick with ticks, aligned to axis_dir starting at origin.
+#define DrawDebugMeterStick(driver, origin, axis_dir, color, depth_test) \
+    DebugDrawer::DrawMeterStick3D(driver, origin, axis_dir, color, depth_test)
+#define DrawDebugYardStick(driver, origin, axis_dir, color, depth_test) \
+    DebugDrawer::DrawYardStick3D(driver, origin, axis_dir, color, depth_test)
 
 class DebugDrawer
 {
@@ -94,7 +100,7 @@ public:
      * @param z_plane 
      * @param half_extent_m 
      * @param step_m 
-     * @param text_height_m 
+     * @param scale 
      * @param color 
      * @param label_x_axis 
      * @param label_y_axis 
@@ -104,7 +110,7 @@ public:
                                  float z_plane,
                                  float half_extent_m,
                                  float step_m,
-                                 float text_height_m,
+                                 float scale,
                                  const irr::video::SColor& color,
                                  bool label_x_axis = true,
                                  bool label_y_axis = true);
@@ -126,13 +132,46 @@ public:
                                        bool draw_components = true
                                        );
     
+    /**
+     * Draws a 1 meter stick with tick marks aligned to axis_dir.
+     */
+    static void DrawMeterStick3D(irr::video::IVideoDriver* driver,
+                                 const chrono::ChVector3d& origin,
+                                 const chrono::ChVector3d& axis_dir,
+                                 const irr::video::SColor& color,
+                                 bool depth_test = true);
+
+    /**
+     * Draws a 1 yard stick with tick marks aligned to axis_dir.
+     */
+    static void DrawYardStick3D(irr::video::IVideoDriver* driver,
+                                const chrono::ChVector3d& origin,
+                                const chrono::ChVector3d& axis_dir,
+                                const irr::video::SColor& color,
+                                bool depth_test = true);
 
     /**
      * Configure the video driver's material to be the debug material so whatever we draw next will be consistnet in material
-     * @param driver 
+     * @param driver
      */
     static void SetDebugDriverMaterial(irr::video::IVideoDriver* driver);
+
+    /**
+     * Draws a horizontal square/plane at a given Z height centered at (x, y).
+     * Useful for visualizing Z thresholds like funnel_halfway_z.
+     */
+    static void DrawHorizontalPlane(irr::video::IVideoDriver* driver,
+                                    const chrono::ChVector3d& center,
+                                    double half_size,
+                                    const irr::video::SColor& color,
+                                    bool depth_test = true);
 };
+
+#define DrawDebugHorizontalPlane(driver, center, half_size, color, depth_test) \
+    do { \
+        DebugDrawer::SetDebugDriverMaterial(driver); \
+        DebugDrawer::DrawHorizontalPlane(driver, center, half_size, color, depth_test); \
+    } while (0)
 
 
 

@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include <chrono_irrlicht/ChVisualSystemIrrlicht.h>
+#include <irrlicht.h>
 
 #include "AMath.h"
 
@@ -45,6 +46,83 @@ namespace
         driver->draw3DLine(end, left, color);
         driver->draw3DLine(end, right, color);
     }
+
+    void DrawStick3D(irr::video::IVideoDriver* driver,
+                     const chrono::ChVector3d& origin,
+                     const chrono::ChVector3d& axis_dir,
+                     double length_m,
+                     double major_step_m,
+                     double minor_step_m,
+                     double tick_len_m,
+                     const irr::video::SColor& color,
+                     bool depth_test,
+                     bool use_special_tick,
+                     double special_tick_m,
+                     const irr::video::SColor& special_color)
+    {
+        if (!driver) return;
+        if (length_m <= 0.0 || minor_step_m <= 0.0) return;
+
+        const double dir_len = std::sqrt(axis_dir.x() * axis_dir.x() +
+                                         axis_dir.y() * axis_dir.y() +
+                                         axis_dir.z() * axis_dir.z());
+        if (dir_len <= 1e-9) return;
+
+        const chrono::ChVector3d dir(axis_dir.x() / dir_len,
+                                     axis_dir.y() / dir_len,
+                                     axis_dir.z() / dir_len);
+
+        irr::video::SMaterial mat;
+        mat.Lighting = false;
+        mat.ZBuffer = depth_test ? irr::video::ECFN_LESSEQUAL : irr::video::ECFN_ALWAYS;
+        mat.ZWriteEnable = true;
+        mat.BackfaceCulling = false;
+        mat.MaterialType = irr::video::EMT_SOLID;
+        driver->setTransform(irr::video::ETS_WORLD, irr::core::matrix4());
+        driver->setMaterial(mat);
+
+        const irr::core::vector3df start(
+            (irr::f32)origin.x(),
+            (irr::f32)origin.y(),
+            (irr::f32)origin.z()
+        );
+        const irr::core::vector3df end(
+            (irr::f32)(origin.x() + dir.x() * length_m),
+            (irr::f32)(origin.y() + dir.y() * length_m),
+            (irr::f32)(origin.z() + dir.z() * length_m)
+        );
+        driver->draw3DLine(start, end, color);
+
+        irr::core::vector3df up(0.0f, 0.0f, 1.0f);
+        const irr::core::vector3df dir_f(
+            (irr::f32)dir.x(), (irr::f32)dir.y(), (irr::f32)dir.z());
+        if (std::abs(dir_f.dotProduct(up)) > 0.98f) {
+            up = irr::core::vector3df(0.0f, 1.0f, 0.0f);
+        }
+        irr::core::vector3df perp = dir_f.crossProduct(up);
+        perp.normalize();
+
+        const int steps = (int)std::floor(length_m / minor_step_m + 1e-6);
+        for (int i = 0; i <= steps; ++i) {
+            const double t = i * minor_step_m;
+            const bool is_major = (major_step_m > 0.0) &&
+                                  (std::abs(std::fmod(t, major_step_m)) <= 1e-6);
+            const float scale = is_major ? 1.6f : 1.0f;
+            const float half_tick = (irr::f32)(tick_len_m * 0.5 * scale);
+
+            const irr::core::vector3df pos(
+                (irr::f32)(origin.x() + dir.x() * t),
+                (irr::f32)(origin.y() + dir.y() * t),
+                (irr::f32)(origin.z() + dir.z() * t)
+            );
+            const irr::core::vector3df a = pos - perp * half_tick;
+            const irr::core::vector3df b = pos + perp * half_tick;
+            const bool is_special = use_special_tick &&
+                                    (std::abs(t - special_tick_m) <= (minor_step_m * 0.5));
+            driver->draw3DLine(a, b, is_special ? special_color : color);
+        }
+    }
+
 }
 
 void DebugDrawer::DrawGridXY(irr::video::IVideoDriver* driver, float z_plane_height, float half_extent_m,
@@ -134,6 +212,40 @@ void DebugDrawer::DrawVector3dAxisArrows(irr::video::IVideoDriver* driver,
     DrawArrow3D(driver, y_end, z_end, irr::video::SColor(255, 0, 0, 255), head_length_m, head_width_m);
 }
 
+void DebugDrawer::DrawMeterStick3D(irr::video::IVideoDriver* driver,
+                                   const chrono::ChVector3d& origin,
+                                   const chrono::ChVector3d& axis_dir,
+                                   const irr::video::SColor& color,
+                                   bool depth_test)
+{
+    DrawStick3D(driver, origin, axis_dir,
+                /*length_m=*/1.0,
+                /*major_step_m=*/0.1,
+                /*minor_step_m=*/0.05,
+                /*tick_len_m=*/0.08,
+                color, depth_test,
+                /*use_special_tick=*/false,
+                /*special_tick_m=*/0.0,
+                /*special_color=*/color);
+}
+
+void DebugDrawer::DrawYardStick3D(irr::video::IVideoDriver* driver,
+                                  const chrono::ChVector3d& origin,
+                                  const chrono::ChVector3d& axis_dir,
+                                  const irr::video::SColor& color,
+                                  bool depth_test)
+{
+    DrawStick3D(driver, origin, axis_dir,
+                /*length_m=*/0.9144,
+                /*major_step_m=*/0.3048,
+                /*minor_step_m=*/0.0762,
+                /*tick_len_m=*/0.08,
+                color, depth_test,
+                /*use_special_tick=*/true,
+                /*special_tick_m=*/0.3683,
+                /*special_color=*/irr::video::SColor(255, 0, 0, 255));
+}
+
 void DebugDrawer::DrawPolyline3D(irr::video::IVideoDriver* driver, const std::vector<chrono::ChVector3d>& pts,
     const irr::video::SColor& color, bool depth_test)
 {
@@ -184,7 +296,7 @@ void DebugDrawer::DrawMeterLabelsXY(irr::IrrlichtDevice* device,
                                  float z_plane,
                                  float half_extent_m,
                                  float step_m,
-                                 float text_height_m,
+                                 float scale,
                                  const irr::video::SColor& color,
                                  bool label_x_axis,
                                  bool label_y_axis)
@@ -196,7 +308,13 @@ void DebugDrawer::DrawMeterLabelsXY(irr::IrrlichtDevice* device,
         if (!guienv) return;
 
         // Built-in font can be small; but billboard text node scales with world size.
-        irr::gui::IGUIFont* font = guienv->getBuiltInFont();
+        irr::gui::IGUIFont* font = nullptr;
+        if (auto* skin = guienv->getSkin()) {
+            font = skin->getFont();
+        }
+        if (!font) {
+            font = guienv->getBuiltInFont();
+        }
         if (!font) return;
 
         const int N = (int)std::floor(half_extent_m / step_m);
@@ -207,19 +325,46 @@ void DebugDrawer::DrawMeterLabelsXY(irr::IrrlichtDevice* device,
                 const float x = i * (float)step_m;
 
                 wchar_t buf[32];
-                swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.0f m", (double)i * step_m);
-
+                swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.0fm", (double)i * step_m);
                 auto* node = smgr->addBillboardTextSceneNode(
                     font,
                     buf,
                     nullptr,
-                    irr::core::dimension2df(text_height_m, text_height_m),
+                    irr::core::dimension2df(-scale, -scale),
                     irr::core::vector3df(x, 0.0f, z_plane)
                 );
                 if (node) {
                     node->setColor(color);
                     node->setMaterialFlag(irr::video::EMF_LIGHTING, false);
                     node->setMaterialFlag(irr::video::EMF_ZWRITE_ENABLE, true);
+                    node->setMaterialFlag(irr::video::EMF_BACK_FACE_CULLING, false);
+                    node->setMaterialType(irr::video::EMT_TRANSPARENT_ALPHA_CHANNEL);
+                    node->setRotation(irr::core::vector3df(0.f, 0.f, 180.f));
+                }
+            }
+
+            const float half_step = (float)step_m * 0.5f;
+            const float minor_scale = (-scale) * 0.6f;
+            for (int i = -N; i < N; i++) {
+                const float x = (i * (float)step_m) + half_step;
+                if (std::abs(x) < 1e-6f) continue;
+
+                wchar_t buf[32];
+                swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.1f m", (double)x);
+                auto* node = smgr->addBillboardTextSceneNode(
+                    font,
+                    buf,
+                    nullptr,
+                    irr::core::dimension2df(minor_scale, minor_scale),
+                    irr::core::vector3df(x, 0.0f, z_plane)
+                );
+                if (node) {
+                    node->setColor(color);
+                    node->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+                    node->setMaterialFlag(irr::video::EMF_ZWRITE_ENABLE, true);
+                    node->setMaterialFlag(irr::video::EMF_BACK_FACE_CULLING, false);
+                    node->setMaterialType(irr::video::EMT_TRANSPARENT_ALPHA_CHANNEL);
+                    node->setRotation(irr::core::vector3df(0.f, 0.f, 180.f));
                 }
             }
         }
@@ -230,22 +375,86 @@ void DebugDrawer::DrawMeterLabelsXY(irr::IrrlichtDevice* device,
                 const float y = i * (float)step_m;
 
                 wchar_t buf[32];
-                swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.0f m (%.0f ft)", (double)i * step_m, METERS_TO_FEET((double)i * step_m));
-
+                swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.0fm", (double)i * step_m);
                 auto* node = smgr->addBillboardTextSceneNode(
                     font,
                     buf,
                     nullptr,
-                    irr::core::dimension2df(text_height_m+0.6f, text_height_m),
+                    irr::core::dimension2df(-scale, -scale),
                     irr::core::vector3df(0.0f, y, z_plane)
                 );
                 if (node) {
                     node->setColor(color);
                     node->setMaterialFlag(irr::video::EMF_LIGHTING, false);
                     node->setMaterialFlag(irr::video::EMF_ZWRITE_ENABLE, true);
+                    node->setMaterialFlag(irr::video::EMF_BACK_FACE_CULLING, false);
+                    node->setMaterialType(irr::video::EMT_TRANSPARENT_ALPHA_CHANNEL);
+                    node->setRotation(irr::core::vector3df(0.f, 0.f, 180.f));
+                }
+            }
 
-                    //node->setScale(irr::core::vector3df(-1.f,1.f,-1.f));
+            const float half_step = (float)step_m * 0.5f;
+            const float minor_scale = (-scale) * 0.6f;
+            for (int i = -N; i < N; i++) {
+                const float y = (i * (float)step_m) + half_step;
+                if (std::abs(y) < 1e-6f) continue;
+
+                wchar_t buf[32];
+                swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%.1f m", (double)y);
+                auto* node = smgr->addBillboardTextSceneNode(
+                    font,
+                    buf,
+                    nullptr,
+                    irr::core::dimension2df(minor_scale, minor_scale),
+                    irr::core::vector3df(0.0f, y, z_plane)
+                );
+                if (node) {
+                    node->setColor(color);
+                    node->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+                    node->setMaterialFlag(irr::video::EMF_ZWRITE_ENABLE, true);
+                    node->setMaterialFlag(irr::video::EMF_BACK_FACE_CULLING, false);
+                    node->setMaterialType(irr::video::EMT_TRANSPARENT_ALPHA_CHANNEL);
+                    node->setRotation(irr::core::vector3df(0.f, 0.f, 180.f));
                 }
             }
         }
+}
+
+void DebugDrawer::DrawHorizontalPlane(irr::video::IVideoDriver* driver,
+                                      const chrono::ChVector3d& center,
+                                      double half_size,
+                                      const irr::video::SColor& color,
+                                      bool depth_test)
+{
+    if (!driver) return;
+
+    irr::video::SMaterial mat;
+    mat.Lighting = false;
+    mat.ZWriteEnable = true;
+    mat.ZBuffer = depth_test ? irr::video::ECFN_LESSEQUAL : irr::video::ECFN_ALWAYS;
+    mat.Thickness = 2.0f;
+    driver->setMaterial(mat);
+    driver->setTransform(irr::video::ETS_WORLD, irr::core::matrix4());
+
+    const float x = static_cast<float>(center.x());
+    const float y = static_cast<float>(center.y());
+    const float z = static_cast<float>(center.z());
+    const float hs = static_cast<float>(half_size);
+
+    // Draw a square outline at z height
+    irr::core::vector3df corners[5] = {
+        {x - hs, y - hs, z},
+        {x + hs, y - hs, z},
+        {x + hs, y + hs, z},
+        {x - hs, y + hs, z},
+        {x - hs, y - hs, z}  // close the loop
+    };
+
+    for (int i = 0; i < 4; ++i) {
+        driver->draw3DLine(corners[i], corners[i + 1], color);
     }
+
+    // Draw cross lines for better visibility
+    driver->draw3DLine(corners[0], corners[2], color);
+    driver->draw3DLine(corners[1], corners[3], color);
+}

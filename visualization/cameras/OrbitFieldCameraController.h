@@ -66,6 +66,12 @@ public:
 
     void SetYawPitch(double yaw, double pitch);
 
+    void SetStepMode(bool enabled);
+    bool IsStepMode() const;
+    int ConsumeStepRequest();
+    bool ConsumeResetRequest();
+    void ResetCamera();
+
     bool OnEvent(const irr::SEvent& event) override;
     
 private:
@@ -90,6 +96,9 @@ private:
     bool m_key_q=false, m_key_e=false;
     bool m_key_i=false, m_key_j=false, m_key_k=false, m_key_l=false;
 
+    bool m_step_mode = false;
+    int m_step_request = 0;
+    bool m_reset_request = false;
 
     void ensureCameraExists();
 

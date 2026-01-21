@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <chrono/physics/ChSystemNSC.h>
 #include <chrono_multicore/physics/ChSystemMulticore.h>
+#include <chrono/collision/ChCollisionModel.h>
 
 class PhysicalSystemFactory
 {
@@ -16,6 +17,9 @@ public:
         
         // 1. Explicitly enable the Bullet collision system
         sys->SetCollisionSystemType(chrono::ChCollisionSystem::Type::BULLET);
+        // Tighten collision envelope to reduce "ghost" contacts.
+        chrono::ChCollisionModel::SetDefaultSuggestedEnvelope(0.001);
+        chrono::ChCollisionModel::SetDefaultSuggestedMargin(0.001);
         
         sys->SetGravitationalAcceleration(chrono::ChVector3d(0, 0, -9.981));
         return sys;
@@ -40,7 +44,7 @@ public:
         
         sys->SetCollisionSystemType(chrono::ChCollisionSystem::Type::MULTICORE);
 
-        sys->GetSettings()->solver.solver_mode = chrono::SolverMode::SLIDING;
+        sys->GetSettings()->solver.solver_mode = chrono::SolverMode::SPINNING;
         sys->GetSettings()->solver.max_iteration_normal = max_iteration / 3;
         sys->GetSettings()->solver.max_iteration_sliding = max_iteration / 3;
         sys->GetSettings()->solver.max_iteration_spinning = 0;

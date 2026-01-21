@@ -1,4 +1,4 @@
-﻿#include "OrbitFieldCameraController.h"
+#include "OrbitFieldCameraController.h"
 #include <irrlicht.h>
 #include <chrono/assets/ChVisualSystem.h>
 #include <chrono_irrlicht/ChVisualSystemIrrlicht.h>
@@ -11,7 +11,7 @@ OrbitFieldCameraController::OrbitFieldCameraController(
                                                                         m_target(initial_target),
                                                                         m_distance(initial_distance),
                                                                         m_yaw(initial_yaw),
-                                                                        m_pitch(initial_pitch),
+                                                                    m_pitch(initial_pitch),
                                                                         m_params(params) {
     clampState();
     ensureCameraExists();
@@ -87,6 +87,36 @@ void OrbitFieldCameraController::SetYawPitch(double yaw, double pitch)
     m_yaw = yaw; m_pitch = pitch;
     clampState();
     applyToCamera();
+}
+
+void OrbitFieldCameraController::SetStepMode(bool enabled)
+{
+    m_step_mode = enabled;
+    m_step_request = 0;
+}
+
+bool OrbitFieldCameraController::IsStepMode() const
+{
+    return m_step_mode;
+}
+
+int OrbitFieldCameraController::ConsumeStepRequest()
+{
+    const int request = m_step_request;
+    m_step_request = 0;
+    return request;
+}
+
+bool OrbitFieldCameraController::ConsumeResetRequest()
+{
+    const bool request = m_reset_request;
+    m_reset_request = false;
+    return request;
+}
+
+void OrbitFieldCameraController::ResetCamera()
+{
+    m_cam = nullptr;
 }
 
 bool OrbitFieldCameraController::OnEvent(const irr::SEvent& event)
@@ -196,6 +226,48 @@ bool OrbitFieldCameraController::handleKey(const irr::SEvent::SKeyInput& k)
         case irr::KEY_KEY_J: m_key_j = down; return false;
         case irr::KEY_KEY_K: m_key_k = down; return false;
         case irr::KEY_KEY_L: m_key_l = down; return false;
+
+        case irr::KEY_SPACE:
+            if (down) {
+                m_step_mode = !m_step_mode;
+                m_step_request = 0;
+            }
+            return true;
+        case irr::KEY_RETURN:
+            if (down) {
+                m_step_request = 1;
+            }
+            return true;
+        case irr::KEY_BACK:
+            if (down) {
+                m_step_request = -1;
+            }
+            return true;
+
+        case irr::KEY_KEY_R:
+            if (down) {
+                m_reset_request = true;
+            }
+            return true;
+
+        case irr::KEY_NUMPAD1:
+            if (down) {
+                const double yaw = k.Control ? (chrono::CH_PI * 0.5) : (-chrono::CH_PI * 0.5);
+                SetYawPitch(yaw, 0.0);
+            }
+            return true;
+        case irr::KEY_NUMPAD3:
+            if (down) {
+                const double yaw = k.Control ? 0.0 : chrono::CH_PI;
+                SetYawPitch(yaw, 0.0);
+            }
+            return true;
+        case irr::KEY_NUMPAD7:
+            if (down) {
+                const double pitch = k.Control ? m_params.max_pitch : m_params.min_pitch;
+                SetYawPitch(m_yaw, pitch);
+            }
+            return true;
 
         default:
             return false;

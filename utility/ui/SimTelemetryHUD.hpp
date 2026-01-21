@@ -55,6 +55,16 @@ public:
     bool IsEnabled() const { return m_enabled; }
 
     // ---------------- Stepable ----------------
+    void DoPhysicsStepBackward() {
+        if (!m_enabled) return;
+        if (m_step_index > 0) {
+            --m_step_index;
+        }
+        // Update sim time tracking to match restored state
+        m_sim_t_prev = m_sys->GetChTime();
+        m_wall_prev = Clock::now();
+    }
+
     void DoPhysicsStep() override {
         if (!m_enabled) return;
 

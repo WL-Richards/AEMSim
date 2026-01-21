@@ -13,7 +13,7 @@
                                                                                 std::make_shared<PhysicalParametersBase>()          \
                                                                                             ->withDensityKgM3(121.7)                \
                                                                                             ->withFrictionCoefficient(0.7)          \
-                                                                                            ->withRestitutionCoefficient(0.2)       \
+                                                                                            ->withRestitutionCoefficient(0.65)       \
                                                                             )
 
 class SphericalProjectileData : public std::enable_shared_from_this<SphericalProjectileData>

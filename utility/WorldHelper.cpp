@@ -22,8 +22,8 @@ std::shared_ptr<chrono::ChBody> WorldHelper::MakeInfiteishFloor(const std::share
                                                                 double half_x, double half_y, double thickness)
 {
     auto mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
-    mat->SetFriction(1.0f);
-    mat->SetRestitution(0.08f);
+    mat->SetFriction(0.86f);
+    mat->SetRestitution(0.65f);
 
     auto floor = chrono_types::make_shared<chrono::ChBodyEasyBox>(
         half_x * 2,
@@ -46,7 +46,9 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateHub(
     const std::shared_ptr<chrono::ChSystem>& sys,
     const chrono::ChVector3d& hubLocation,
     const chrono::ChQuaternion<double>& rotation,
-    std::vector<std::shared_ptr<chrono::ChBody>>* funnel_bodies_out)
+    std::vector<std::shared_ptr<chrono::ChBody>>* funnel_bodies_out,
+    double opening_size_x_in,
+    double opening_size_y_in)
 {
     
     auto hub = chrono_types::make_shared<chrono::ChBody>();
@@ -58,16 +60,16 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateHub(
     auto mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();\
     hub->EnableCollision(true);
 
-    // HUB CENTER
-    auto hubCenterVis = chrono_types::make_shared<chrono::ChVisualShapeBox>(
-        0.1, 0.1, 0.1
-    );
-    hubCenterVis->SetColor(chrono::ChColor(0.f, 1.f, 0.f));
-
-    hub->AddVisualShape(
-        hubCenterVis,
-        chrono::ChFrame<>(chrono::ChVector3d(0, 0, INCHES_TO_METERS(59.64)), chrono::QUNIT)
-    );
+    // // HUB CENTER
+    // auto hubCenterVis = chrono_types::make_shared<chrono::ChVisualShapeBox>(
+    //     0.1, 0.1, 0.1
+    // );
+    // hubCenterVis->SetColor(chrono::ChColor(0.f, 1.f, 0.f));
+    //
+    // hub->AddVisualShape(
+    //     hubCenterVis,
+    //     chrono::ChFrame<>(chrono::ChVector3d(0, 0, INCHES_TO_METERS(59.64)), chrono::QUNIT)
+    // );
     
     // --- HUB FRONT FACE ---
     const double front_length = INCHES_TO_METERS(47);
@@ -133,6 +135,9 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateHub(
 
     const double front_trap_center_y = front_inner_y - max_y_offset;
     const double front_trap_center_z = wall_height - min_z_offset;
+    const double trap_top_ratio = front_trap_top_x / front_trap_bottom_x;
+    const double side_trap_bottom = side_span_y;
+    const double side_trap_top = side_trap_bottom * trap_top_ratio;
 
     WorldHelper::CreateTrapezoidalPrism(
         sys,
@@ -140,6 +145,50 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateHub(
         rotation * chrono::QuatFromAngleX(front_trap_angle_x),
         front_trap_bottom_x, front_trap_thickness,
         front_trap_top_x, front_trap_thickness,
+        front_trap_rise,
+        /*density=*/1000.0,
+        /*fixed=*/true,
+        chrono::ChColor(0.f, 0.f, 1.f)
+    );
+
+    const double back_inner_y = back_center_y - wall_thickness;
+    const double back_trap_center_y = back_inner_y + max_y_offset;
+    WorldHelper::CreateTrapezoidalPrism(
+        sys,
+        hubLocation + rotation.Rotate(chrono::ChVector3d(0, back_trap_center_y, front_trap_center_z)),
+        rotation * chrono::QuatFromAngleX(-front_trap_angle_x),
+        front_trap_bottom_x, front_trap_thickness,
+        front_trap_top_x, front_trap_thickness,
+        front_trap_rise,
+        /*density=*/1000.0,
+        /*fixed=*/true,
+        chrono::ChColor(0.f, 0.f, 1.f)
+    );
+
+
+    
+    const double left_inner_x = -side_center_x + wall_thickness;
+    const double left_trap_center_x = left_inner_x - max_y_offset;
+    WorldHelper::CreateTrapezoidalPrism(
+        sys,
+        hubLocation + rotation.Rotate(chrono::ChVector3d(left_trap_center_x, side_center_y, front_trap_center_z)),
+        rotation * chrono::QuatFromAngleZ(-chrono::CH_PI / 2.0) * chrono::QuatFromAngleX(front_trap_angle_x),
+        side_trap_bottom, front_trap_thickness,
+        side_trap_top, front_trap_thickness,
+        front_trap_rise,
+        /*density=*/1000.0,
+        /*fixed=*/true,
+        chrono::ChColor(0.f, 0.f, 1.f)
+    );
+
+    const double right_inner_x = side_center_x - wall_thickness;
+    const double right_trap_center_x = right_inner_x + max_y_offset;
+    WorldHelper::CreateTrapezoidalPrism(
+        sys,
+        hubLocation + rotation.Rotate(chrono::ChVector3d(right_trap_center_x, side_center_y, front_trap_center_z)),
+        rotation * chrono::QuatFromAngleZ(chrono::CH_PI / 2.0) * chrono::QuatFromAngleX(front_trap_angle_x),
+        side_trap_bottom, front_trap_thickness,
+        side_trap_top, front_trap_thickness,
         front_trap_rise,
         /*density=*/1000.0,
         /*fixed=*/true,
@@ -211,6 +260,49 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateHub(
             chrono::ChVector3d(side_center_x, side_center_y, wall_z),
             chrono::QUNIT)
     );
+
+    const double funnel_center_z =
+        INCHES_TO_METERS(59.64 + (17.90 / 2.0) - 0.963);
+    const double funnel_height = INCHES_TO_METERS(17.90);
+    const double deck_thickness = INCHES_TO_METERS(0.25);
+    const double trap_top_z = front_trap_center_z + (front_trap_rise * 0.5);
+    const double deck_z = trap_top_z - (deck_thickness * 0.5);
+    const double inner_x = front_length - (wall_thickness * 2.0);
+    const double inner_y = side_length - (wall_thickness * 2.0);
+    const double deck_outer_x = std::min(front_trap_top_x, inner_x);
+    const double deck_outer_y = std::min(side_trap_top, inner_y);
+    const double opening_size_x =
+        std::min(INCHES_TO_METERS(opening_size_x_in), std::min(inner_x, deck_outer_x));
+    const double opening_size_y =
+        std::min(INCHES_TO_METERS(opening_size_y_in), std::min(inner_y, deck_outer_y));
+    const double deck_x_span = std::max(0.0, deck_outer_x - opening_size_x);
+    const double deck_y_span = std::max(0.0, deck_outer_y - opening_size_y);
+    const double deck_half_x_span = deck_x_span * 0.5;
+    const double deck_half_y_span = deck_y_span * 0.5;
+
+    auto add_deck_panel = [&](const chrono::ChVector3d& local_pos, double size_x, double size_y) {
+        if (size_x <= 0.0 || size_y <= 0.0) return;
+        auto deck_collision = chrono_types::make_shared<chrono::ChCollisionShapeBox>(
+            mat, size_x, size_y, deck_thickness
+        );
+        hub->AddCollisionShape(deck_collision, chrono::ChFrame<>(local_pos, chrono::QUNIT));
+
+        auto deck_vis = chrono_types::make_shared<chrono::ChVisualShapeBox>(
+            size_x, size_y, deck_thickness
+        );
+        deck_vis->SetColor(chrono::ChColor(0.f, 0.2f, 0.8f));
+        hub->AddVisualShape(deck_vis, chrono::ChFrame<>(local_pos, chrono::QUNIT));
+    };
+
+    // Frame panels around the funnel opening (leave central hole unobstructed).
+    add_deck_panel(chrono::ChVector3d(0, (opening_size_y * 0.5) + (deck_half_y_span * 0.5), deck_z),
+                   deck_outer_x, deck_half_y_span);
+    add_deck_panel(chrono::ChVector3d(0, -(opening_size_y * 0.5) - (deck_half_y_span * 0.5), deck_z),
+                   deck_outer_x, deck_half_y_span);
+    add_deck_panel(chrono::ChVector3d((opening_size_x * 0.5) + (deck_half_x_span * 0.5), 0, deck_z),
+                   deck_half_x_span, opening_size_y);
+    add_deck_panel(chrono::ChVector3d(-(opening_size_x * 0.5) - (deck_half_x_span * 0.5), 0, deck_z),
+                   deck_half_x_span, opening_size_y);
     
     auto funnel_bodies = WorldHelper::CreateTrapezoidalPrismRing(
         sys,
@@ -280,7 +372,7 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateTriangleMesh(
 
     auto mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
     mat->SetFriction(0.8f);
-    mat->SetRestitution(0.05f);
+    mat->SetRestitution(0.4f);
 
     auto col_shape =
         chrono_types::make_shared<chrono::ChCollisionShapeTriangleMesh>(
@@ -476,8 +568,8 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateTrapezoidalPrism(
     };
 
     auto mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
-    mat->SetFriction(0.8f);
-    mat->SetRestitution(0.05f);
+    mat->SetFriction(0.86f);
+    mat->SetRestitution(0.65f);
 
     auto body = chrono_types::make_shared<chrono::ChBodyEasyConvexHull>(
         points,
@@ -586,6 +678,55 @@ std::vector<std::shared_ptr<chrono::ChBody>> WorldHelper::CreateTrapezoidalPrism
         );
         if (body) bodies.push_back(body);
     }
+
+    return bodies;
+}
+
+std::vector<std::shared_ptr<chrono::ChBody>> WorldHelper::CreateWalls(
+        const std::shared_ptr<chrono::ChSystem>& sys,
+        const chrono::ChVector3d& center,
+        double half_x,
+        double half_y,
+        double height,
+        double thickness,
+        double density,
+        bool fixed,
+        const chrono::ChColor& color)
+{
+    std::vector<std::shared_ptr<chrono::ChBody>> bodies;
+    if (!sys) return bodies;
+    if (half_x <= 0.0 || half_y <= 0.0 || height <= 0.0 || thickness <= 0.0) return bodies;
+
+    auto mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    mat->SetFriction(0.86f);
+    mat->SetRestitution(0.65f);
+
+    const double wall_half_z = height * 0.5;
+    const chrono::ChVector3d z_offset(0, 0, wall_half_z);
+
+    auto make_wall = [&](const chrono::ChVector3d& local_center, double size_x, double size_y) {
+        auto body = chrono_types::make_shared<chrono::ChBodyEasyBox>(
+            size_x, size_y, height, density, true, true, mat
+        );
+        body->SetPos(center + local_center + z_offset);
+        body->SetFixed(fixed);
+        body->EnableCollision(true);
+        if (auto vm = body->GetVisualModel()) {
+            for (size_t i = 0; i < vm->GetNumShapes(); ++i) {
+                vm->GetShape(i)->SetColor(color);
+            }
+        }
+        sys->AddBody(body);
+        bodies.push_back(body);
+    };
+
+    // North/South walls
+    make_wall(chrono::ChVector3d(0,  half_y + thickness * 0.5, 0), half_x * 2.0, thickness);
+    make_wall(chrono::ChVector3d(0, -half_y - thickness * 0.5, 0), half_x * 2.0, thickness);
+
+    // East/West walls
+    make_wall(chrono::ChVector3d( half_x + thickness * 0.5, 0, 0), thickness, half_y * 2.0);
+    make_wall(chrono::ChVector3d(-half_x - thickness * 0.5, 0, 0), thickness, half_y * 2.0);
 
     return bodies;
 }
