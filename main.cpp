@@ -78,7 +78,7 @@ void SpawnProjectilesFromCSV(const std::string& filepath,
             values.push_back(std::stod(token));
         }
 
-        if (values.size() >= 5) {
+        if (values.size() >= 5 && (values[2] != 0 && values[3] != 0 && values[4] != -1)) {
             const ChVector3d p0(values[0], values[1], FEET_TO_METERS(2));
             const ChVector3d v0(values[2], values[3], values[4]);
             spawner->Spawn(p0, v0, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
         //scene.spawner->SweepShots(p0, 50.f, 70.f, 0.5f, 6.f, 10.5f, 0.25f, robot_velocity, v0);
         // Option 2: Single hardcoded spawn
         //scene.spawner->Spawn(p0, v0, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
-        SpawnProjectilesFromCSV("C:\\Users\\Will\\Downloads\\out(1).txt", scene.spawner);
+        SpawnProjectilesFromCSV("../data/v2_skim_shot.txt", scene.spawner);
         //scene.spawner->Spawn(p1, v1, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
         //scene.spawner->Spawn(p0, -v0, ChVector3d(0,0,0), true, chrono::ChColor(1,0,0), true);
         //scene.spawner->SetEnableFreezeOnContact(false);
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
             const double funnel_tilt = 0.54;
 
             // Set halfway_z to the TOP of the funnel
-            const double funnel_halfway_z = funnel_center_z + (funnel_height * 0.34);
+            const double funnel_halfway_z = funnel_center_z + (funnel_height * 0.36);
             const double funnel_halfway_z_world = hub_location.z() + funnel_halfway_z;
             debug_funnel_halfway_z = funnel_halfway_z;
 

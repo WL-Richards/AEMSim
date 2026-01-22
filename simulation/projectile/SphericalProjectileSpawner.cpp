@@ -503,7 +503,8 @@ void SphericalProjectileSpawner::DoRenderStep(irr::video::IVideoDriver* drv)
                                : (projectile->Removed
                                       ? irr::video::SColor(255, 255, 60, 60)
                                       : irr::video::SColor(255, 255, 200, 0));
-        DrawDebugPolyline(drv, projectile->TrajectoryPoints, color, true);
+            DrawDebugPolyline(drv, projectile->TrajectoryPoints, color, true);
+    
     }
 }
 
