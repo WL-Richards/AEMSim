@@ -217,6 +217,50 @@ std::shared_ptr<chrono::ChBody> WorldHelper::CreateHub(
             chrono::QUNIT)
     );
 
+    auto hubNetCollision = chrono_types::make_shared<chrono::ChCollisionShapeBox>(
+        mat,
+        1.42, wall_thickness, 3.05
+    );
+    hub->AddCollisionShape(
+        hubNetCollision,
+        chrono::ChFrame<>(
+            chrono::ChVector3d(0, back_center_y + 0.3, 3.05 / 2),
+            chrono::QUNIT)
+    );
+
+    auto hubNetVis = chrono_types::make_shared<chrono::ChVisualShapeBox>(
+        1.42, wall_thickness, 3.05
+    );
+    hubNetVis->SetColor(chrono::ChColor(0.f, 0.f, 1.f));
+    hub->AddVisualShape(
+        hubNetVis,
+        chrono::ChFrame<>(
+            chrono::ChVector3d(0, back_center_y + 0.3, 3.05 / 2),
+            chrono::QUNIT)
+    );
+
+    auto trenchCollision = chrono_types::make_shared<chrono::ChCollisionShapeBox>(
+        mat,
+        10, wall_thickness, 1.02
+    );
+    hub->AddCollisionShape(
+        trenchCollision,
+        chrono::ChFrame<>(
+            chrono::ChVector3d(0, back_center_y - side_length/2, 1.02/2),
+            chrono::QUNIT)
+    );
+
+    auto trenchVis = chrono_types::make_shared<chrono::ChVisualShapeBox>(
+        10, wall_thickness, 1.02
+    );
+    trenchVis->SetColor(chrono::ChColor(0.f, 0.f, 1.f));
+    hub->AddVisualShape(
+        trenchVis,
+        chrono::ChFrame<>(
+            chrono::ChVector3d(0, back_center_y - side_length/2, 1.02/2),
+            chrono::QUNIT)
+    );
+
     auto hubLeftWallCollision = chrono_types::make_shared<chrono::ChCollisionShapeBox>(
         mat,
         wall_thickness, side_span_y, wall_height

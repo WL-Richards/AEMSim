@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
         //scene.spawner->SweepShots(p0, 50.f, 70.f, 0.5f, 6.f, 10.5f, 0.25f, robot_velocity, v0);
         // Option 2: Single hardcoded spawn
         //scene.spawner->Spawn(p0, v0, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
-        SpawnProjectilesFromCSV("../data/v2_skim_shot.txt", scene.spawner);
+        SpawnProjectilesFromCSV("../data/v4_passing.txt", scene.spawner);
         //scene.spawner->Spawn(p1, v1, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
         //scene.spawner->Spawn(p0, -v0, ChVector3d(0,0,0), true, chrono::ChColor(1,0,0), true);
         //scene.spawner->SetEnableFreezeOnContact(false);
