@@ -61,6 +61,7 @@ void SpawnProjectilesFromCSV(const std::string& filepath,
 
     std::string line;
     int count = 0;
+    int lines_read = 0;
     while (std::getline(file, line)) {
         if (line.empty()) continue;
 
@@ -79,8 +80,8 @@ void SpawnProjectilesFromCSV(const std::string& filepath,
         }
 
         if (values.size() >= 5 && (values[2] != 0 && values[3] != 0 && values[4] != -1)) {
-            const ChVector3d p0(values[0], values[1], FEET_TO_METERS(2));
-            const ChVector3d v0(values[2], values[3], values[4]);
+            const ChVector3d p0(values[0], values[1], values[2]);
+            const ChVector3d v0(values[3], values[4], values[5]);
             spawner->Spawn(p0, v0, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
             ++count;
         }
@@ -99,7 +100,7 @@ int main(int argc, char* argv[]) {
     // 2 - Spawn Projectiles
     // const ChVector3d p0(0, (1 - INCHES_TO_METERS(23.373)) - 0.8, FEET_TO_METERS(2));      // 1m above ground
 
-    const ChVector3d p0(2, 3,FEET_TO_METERS(2));
+    const ChVector3d p0(2, 3, FEET_TO_METERS(2) + 0.5);
     const ChVector3d v0(2.56632, 1.01743, 2.97807);
     //const ChVector3d v0(0, 1, 0);
     const ChVector3d robot_velocity(0,0,0);
@@ -110,7 +111,7 @@ int main(int argc, char* argv[]) {
     //projectileSpawner->SweepShots(p0, 60.f, 70.f, 0.5f, 8.f, 10.5f, 0.25f, robot_velocity, v0);
  
     // FARTHEST WE CAN BE FROM HUB:
-    const ChVector3d hub_location(4.6101, 4.03479, FEET_TO_METERS(2));
+    const ChVector3d hub_location(4.6101, 4.03479, 0);
 
     // Funnel geometry constants for debug visualization
     const double debug_funnel_center_z = INCHES_TO_METERS(59.64 + (17.90 / 2.0) - 0.963);
@@ -135,7 +136,7 @@ int main(int argc, char* argv[]) {
         //scene.spawner->SweepShots(p0, 50.f, 70.f, 0.5f, 6.f, 10.5f, 0.25f, robot_velocity, v0);
         // Option 2: Single hardcoded spawn
         //scene.spawner->Spawn(p0, v0, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
-        SpawnProjectilesFromCSV("../data/v4_passing.txt", scene.spawner);
+        SpawnProjectilesFromCSV("../data/Scoring_Hub_Initial_Velocities.csv", scene.spawner);
         //scene.spawner->Spawn(p1, v1, ChVector3d(0,0,0), true, chrono::ChColor(1,1,0), true);
         //scene.spawner->Spawn(p0, -v0, ChVector3d(0,0,0), true, chrono::ChColor(1,0,0), true);
         //scene.spawner->SetEnableFreezeOnContact(false);
